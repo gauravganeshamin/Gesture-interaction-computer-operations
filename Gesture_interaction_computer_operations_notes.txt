@@ -1,0 +1,114 @@
+Gesture control
+Using hand tracking model…uses 2 modules in backend…palm detection and hand landmarks
+Palm detection model takes complete image and provides us with cropped image of hand
+Hand landmarks model finds 21 different landmarks on the cropped image of hand..model is trained on images of 30000 hands…it is cross platform and no problems with config
+We will be using opencv and mediapipe packages
+In order to play the game by hand gestures we first need to track the hand and then recognise the gestures.
+For hand-tracking we have used python modules like OpenCV and mediapipe.
+OpenCV is a large open-source library for computer vision, machine learning, and image processing
+We used it to identify player’s hand. We employ vector space and execute mathematical operations on these features to identify visual patterns and their various features.
+Media Pipe serve as the foundation for controlling hand gestures, as well as enabling the overlay of digital content and information on top of the physical world in augmented reality
+MediaPipe Hands is a high-fidelity hand and finger tracking solution. It employs machine learning (ML) to infer 21 3D landmarks of a hand from just a single frame
+
+
+HandTrackingModule.py detects the hand from the image and draws the 21 different landmarks on the image
+Mediapipe is a cross-platform library developed by Google that provides amazing ready-to-use ML solutions for computer vision tasks.
+OpenCV library in python is a computer vision library that is widely used for image analysis, image processing, detection, recognition, etc.
+
+
+
+
+
+
+Steps followed:
+Importing necessary libraries
+Capture the frames continuously from the camera using OpenCV.
+Using mediapipe for detecting landmarks on the image.
+The model produces 21 Hand landmarks
+Draw the detected landmarks on the image using the mediapipe
+
+For the purpose of identifying the gestures, we will be making use of the landmarks of the fingertips. Each finger has 4 landmarks, from the tip to the bottom. So, If the location of the fingertip landmark is lower than the other landmarks, it means that the finger is open…(top values are lower than bottom)..
+We will have a list to store the values of the fingers…with 0 meaning that the finger is closed and 1 meaning that the finger is open
+We then get the number of open fingers based on the above logic
+We will be using the finger count logic for moving the snake
+1=left
+2=up
+3=right
+4=down
+
+
+Gesture controlled coding environment and teaching tools
+1)
+Gesture controlled presentation navigation 
+Install cvzone, mediapipe
+When we install cvzone, it installs opencv and numpy 
+Camera setup
+Get the list of presentation images
+For this, we store all the slides of the PPT in a folder called “PPT” as images, so that they can be iterated upon as the gesture is made
+If there are more than 10 slides in the PPT (and consequently 10+ images in the PPT folder)..a problem occurs. Slide 10 will come next after slide 1. Hence, to avoid this issue, we do the sorting by number as well as by length.
+Gesture is to be made above head in order to avoid false moves that are otherwise gestures made during a normal presentation
+We have made a threshold line…gestures only made above that threshold line will be checked for left and right movement
+If the gesture is above the threshold line, it will then be checked if the list is [1,0,0,0,0]...if so, it means that the thumb is open and presentation should move to prev slide..decremement the image index by 1…keep a condition so that the image number does not reduce below 0, or else it would lead to error
+Similarly,  if the list is [0,0,0,0,1]..., it means that the little finger is open and presentation should move to next slide..incremement the image index by 1..,.keep a condition so that the image number does not increase beyond the last number, or else it would lead to error
+Right now, when user makes a left and right gesture, it moves very quickly to first and last slide respectively, because at each frame a detection is made…in order to avoid this, we will be introducing another variable which will not do anything for a fixed (eg 30) number of frames (so that the recognition is done slower)...after the number of frames is greater than the decided value, we will let the gesture recognition start again
+
+
+
+2)
+Gesture-controlled mouse
+OpenCV is required, 
+mediapipe is required for hand tracking functionality
+Autopy is required for mouse operations
+Steps in project
+Camera setup using opencv
+Finding hand landmarks
+Check which fingers are up
+If only index finger is raised, it mean that the mouse is in moving mode
+If mouse is in moving mode, we need to convert the coordinates because the webcam will give us a value from 640 to 480, but our screen size will be more
+Smoothening of values so that the mouse does not move abruptly from one location to another
+Moving of mouse
+If both index and middle fingers are raised and distance between the 2 fingers is less than a certain value, the mouse is in clicking mode
+First step is to draw the hand landmarks
+Then, next step is to get the tips of the index and middle fingers
+If only index finger is raised, we are now in moving mode, 
+Next step is to perform conversion of values. We will also create a box that will simulate the movement of mouse across the screen…pointing at the corners of the box would point to the corners of the screen..So we use interp function of numpy to map the coordinates to screen-wide width and height..and
+We will then send these values to the mouse
+And using autopy.mouse.move() we can move the mouse to the position
+We then will work on the clicking mode of the mouse. If the index and middle fingers are raised and the distance between fingers is less than a certain value, we will call the autopy.mouse.click() function in order to get the mouse to click
+Instead of calling mouse.move() function directly on the coordinates and making the mouse move abruptly to new coordinates, we can smoothen out the movement a little
+
+
+
+
+3)
+Volume control module:
+Intial process (landmark detection and hand detection similar to prev modules).....
+Then find the length btw thumb and index finger..this length will be normalized to the volume range for controlling volume...He is doing the normalizing across both of those ranges using numpy.interp
+he is using a library called pycaw in order to control device volume...
+The normalized range obtained after passing the distance range (of index and thumb) to np.interp is then passed to a function of pycaw (SetMasterVolumeLevel) to change device volume...
+
+
+
+4)
+Virtual zoom module:
+Same initial process as other modules (landmark detection and hand detection)
+Then he checks if both thumb and index fingers of both the hands are up or not...if yes...he finds the distance between the 2 index fingers...let this distance be 'x'
+If distance btw 2 index fingers is less than 'x' it means tht it is zoom out...if distance btw 2 index fingers is greater than 'x' it means zoom in....similar logic when u actually zoom...when ur fingers move farther its a zoom in...when ur fingers come closer...its a zoom out...
+So he needs to have an initial point frm where zoom in /zoom out is calculated...he sets the dist value to none initially...when the cam loads and his 2 index fingers r on screen..tht is taken as initial point and 'x' is calculated...
+any distance lesser than 'x' means zoom out..any distance greater than 'x' means zoom in...and when any of his index fingers goes down...the value of 'x' is set to None again....and only when both those fingers r up again..'x' is calculated again...
+Then he basically stores the scale of zoom
+If its zoomed in..(current distance greater than orignal distance)...then scale is positive (current distance-original distance)
+If its zoomed out..(current distance less than orignal distance)...then scale is negative (current distance-original distance)....
+After obtaining the scale...he then resizes the image to be (width+scale,height+scale).....
+so basically..if scale is positive..width and height will increase...which will make it zoomed in..
+if scale is negatve..width and height will decrease...which will make it zoomed out..
+
+
+
+
+
+
+
+
+
+
